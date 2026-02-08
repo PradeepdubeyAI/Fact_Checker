@@ -13,6 +13,14 @@ from datetime import datetime
 from typing import Dict, List, Any
 from dotenv import load_dotenv
 
+# Download required NLTK data
+import nltk
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', quiet=True)
+    nltk.download('punkt_tab', quiet=True)
+
 # Setup logger
 logger = logging.getLogger(__name__)
 
