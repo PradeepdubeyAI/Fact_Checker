@@ -1,0 +1,218 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Environment variables and secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+apps/agent/.env
+.streamlit/secrets.toml
+
+# API Keys and sensitive data
+*_API_KEY*
+api_keys.py
+secrets.py
+config.ini
+
+# Streamlit
+.streamlit/
+
+# Excel reports (generated files)
+*.xlsx
+fact_check_report_*.xlsx
+apps/streamlit/*.xlsx
+
+# Video files (test data)
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.wmv
+*.flv
+
+# Audio files (temporary)
+*.wav
+*.mp3
+*.m4a
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+.temp/
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Node.js (for desktop app)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Build outputs
+apps/desktop/electron/build/
+apps/desktop/electron/dist/
+apps/desktop/electron/out/
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Windows
+*.stackdump
+[Dd]esktop.ini
+
+# macOS
+.AppleDouble
+.LSOverride
+Icon
+.DocumentRevisions-V100
+.fseventsd
+.TemporaryItems
+.VolumeIcon.db
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+
+# Linux
+*~
+.directory
+.Trash-*
+.nfs*
+
+# Redis
+dump.rdb
+
+# LangGraph
+.langgraph_api/
+langgraph.db
+
+# LangSmith
+.langsmith/
+
+# Test files and debug outputs
+test_*.py
+debug_*.py
+*_test.py
+*_debug.py
+test_output/
+test_results/
+
+# Documentation build
+docs/_build/
+docs/.doctrees/
+.docusaurus/
+
+# Package manager
+poetry.lock
+Pipfile.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# pytype
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# Backup files
+*.bak
+*.swp
+*.swo
+*~
+
+# Project specific
+check_excel.py
+diagnostic_test.py
+test_extraction_direct.py
+test_salary_extraction.py
+test_preprocessing.py
+test_preprocessing_formats.py
+test_youtube_script.py
+debug_keyvalue.py
+
+# Exclude temporary documentation
+CLAIM_EXTRACTOR_COST_ANALYSIS.md
+README_NEW.md

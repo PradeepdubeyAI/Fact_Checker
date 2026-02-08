@@ -1,0 +1,64 @@
+{
+  "name": "claimeai-desktop",
+  "version": "1.0.0",
+  "description": "ClaimAI Desktop - Fact Checking Application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win portable",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "pack": "electron-builder --dir"
+  },
+  "keywords": ["fact-checking", "ai", "desktop"],
+  "author": "Your Name",
+  "license": "MIT",
+  "build": {
+    "appId": "com.claimeai.desktop",
+    "productName": "ClaimAI",
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!**/*.ts",
+      "!*.md",
+      "!src/**/*",
+      "build/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../python-backend",
+        "to": "python-backend",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "assets/icon.ico",
+      "artifactName": "${productName}.${ext}",
+      "signAndEditExecutable": false
+    },
+    "mac": {
+      "target": ["dmg", "zip"],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "assets/icon.png",
+      "category": "Utility"
+    }
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "electron-store": "^8.1.0"
+  },
+  "devDependencies": {
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.0"
+  }
+}
