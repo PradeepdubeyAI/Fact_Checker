@@ -18,6 +18,9 @@ tavily-python>=0.5.0
 pandas>=2.0.0
 openpyxl>=3.1.0
 
+# Caching & Storage
+redis>=5.0.0
+
 # Video Processing
 moviepy>=1.0.3
 
