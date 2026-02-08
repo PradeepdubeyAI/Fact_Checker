@@ -1,0 +1,28 @@
+# Web Framework
+streamlit>=1.31.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# LangChain/LangGraph - Agent Framework
+langgraph>=0.4.0
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-openai>=0.3.0
+langchain-tavily>=0.2.0
+
+# AI/ML APIs
+openai>=1.0.0
+tavily-python>=0.5.0
+
+# Data Processing
+pandas>=2.0.0
+openpyxl>=3.1.0
+
+# Video Processing
+moviepy>=1.0.3
+
+# NLP & Machine Learning
+nltk>=3.9.0
+pydantic-settings>=2.10.0
+sentence-transformers>=5.0.0
+scikit-learn>=1.7.0
