@@ -31,6 +31,11 @@ sys.path.insert(0, agent_path)
 # Load environment variables
 load_dotenv(os.path.join(agent_path, '.env'))
 
+# Clear OpenAI key from environment - user must provide it via UI
+# (Keep Tavily key as fallback since it's optional)
+if 'OPENAI_API_KEY' in os.environ:
+    del os.environ['OPENAI_API_KEY']
+
 # Import Excel export module
 try:
     from export_excel import generate_excel_report
@@ -106,6 +111,24 @@ def initialize_session_state():
         st.session_state.processing = False
     if 'metrics_summary' not in st.session_state:
         st.session_state.metrics_summary = None
+    if 'user_openai_key' not in st.session_state:
+        st.session_state.user_openai_key = ''
+        # Clear OpenAI key from environment to force user input
+        if 'OPENAI_API_KEY' in os.environ:
+            del os.environ['OPENAI_API_KEY']
+    if 'user_tavily_key' not in st.session_state:
+        st.session_state.user_tavily_key = ''
+    # Legacy support for old tavily key storage
+    if 'use_custom_tavily' not in st.session_state:
+        st.session_state.use_custom_tavily = False
+    if 'custom_tavily_key' not in st.session_state:
+        st.session_state.custom_tavily_key = ''
+    if 'user_openai_key' not in st.session_state:
+        st.session_state.user_openai_key = ''
+    if 'user_tavily_key' not in st.session_state:
+        st.session_state.user_tavily_key = ''
+    if 'api_keys_configured' not in st.session_state:
+        st.session_state.api_keys_configured = False
     if 'custom_tavily_key' not in st.session_state:
         st.session_state.custom_tavily_key = ''
     if 'use_custom_tavily' not in st.session_state:
@@ -134,10 +157,10 @@ def run_claim_extraction(text: str) -> Dict[str, Any]:
         
         # Log metrics summary
         tracker = get_metrics_tracker()
-        logger.info("\n" + "="*50)
+        logger.info("" + "="*50)
         logger.info("Claim Extraction Complete")
         tracker.log_summary()
-        logger.info("="*50 + "\n")
+        logger.info("="*50 + "")
         
         # Save metrics to session state
         st.session_state.metrics_summary = tracker.get_summary()
@@ -186,10 +209,10 @@ def run_single_fact_check(claim: str) -> Dict[str, Any]:
         
         # Log metrics summary
         tracker = get_metrics_tracker()
-        logger.info("\n" + "="*50)
+        logger.info("" + "="*50)
         logger.info("Single Fact Verification Complete")
         tracker.log_summary()
-        logger.info("="*50 + "\n")
+        logger.info("="*50 + "")
         
         # Save metrics to session state
         st.session_state.metrics_summary = tracker.get_summary()
@@ -324,7 +347,7 @@ def detect_language(text: str) -> str:
                 },
                 {
                     "role": "user",
-                    "content": f"What language is this text in?\n\n{text[:500]}"
+                    "content": f"What language is this text in?{text[:500]}"
                 }
             ],
             temperature=0.1
@@ -355,7 +378,7 @@ def translate_to_english(text: str) -> str:
                 },
                 {
                     "role": "user",
-                    "content": f"Translate this text to English:\n\n{text}"
+                    "content": f"Translate this text to English:{text}"
                 }
             ],
             temperature=0.1
@@ -442,11 +465,11 @@ def verify_selected_claims(claims: List, extracted_claims: List = None) -> Dict[
         
         # Log metrics
         tracker = get_metrics_tracker()
-        logger.info("\n" + "="*50)
+        logger.info("" + "="*50)
         logger.info(f"Fact-Check Complete - Verified {len(claims)} claims")
         logger.info("📊 Cost shown below includes BOTH extraction + verification")
         tracker.log_summary()
-        logger.info("="*50 + "\n")
+        logger.info("="*50 + "")
         
         # Get final metrics summary with Tavily calls
         final_metrics = tracker.get_summary()
@@ -714,41 +737,89 @@ def render_metrics_summary():
 
 def check_api_keys():
     """Check if required API keys are configured"""
-    openai_key = os.getenv('OPENAI_API_KEY')
-    tavily_key = os.getenv('TAVILY_API_KEY')
+    # Default Tavily API key (from .env fallback)
+    DEFAULT_TAVILY_KEY = os.getenv('TAVILY_API_KEY', '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')
     
-    # Default Tavily API key (fallback)
-    DEFAULT_TAVILY_KEY = "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"
+    # Get OpenAI key from user input only (no .env fallback)
+    openai_key = st.session_state.get('user_openai_key', '').strip()
     
-    # Use custom Tavily key if provided in UI
-    if st.session_state.get('use_custom_tavily') and st.session_state.get('custom_tavily_key'):
-        tavily_key = st.session_state.custom_tavily_key
-        os.environ['TAVILY_API_KEY'] = tavily_key
-    elif not tavily_key:
-        # Use default if no key in environment
+    # Get Tavily key - priority: user input > custom (legacy) > environment > default
+    tavily_key = st.session_state.get('user_tavily_key', '').strip()
+    if not tavily_key and st.session_state.get('use_custom_tavily'):
+        tavily_key = st.session_state.get('custom_tavily_key', '')
+    if not tavily_key:
         tavily_key = DEFAULT_TAVILY_KEY
+    
+    # Set environment variables
+    if openai_key:
+        os.environ['OPENAI_API_KEY'] = openai_key
+    if tavily_key:
         os.environ['TAVILY_API_KEY'] = tavily_key
     
-    if not openai_key:
-        st.error("⚠️ OpenAI API key not configured!")
-        st.markdown("""
-        Please set up your OpenAI API key:
-        
-        **Option 1:** Set in `apps/agent/.env`:
-        ```
-        OPENAI_API_KEY=sk-proj-your-key-here
-        ```
-        
-        **Option 2:** Add in Streamlit secrets (`.streamlit/secrets.toml`):
-        ```
-        OPENAI_API_KEY = "sk-proj-your-key-here"
-        ```
-        
-        Get API key from: https://platform.openai.com/api-keys
-        """)
-        return False
+    return bool(openai_key)
+
+
+def render_api_key_input():
+    """Render API key input section in main UI"""
     
-    return True
+    col1, col2 = st.columns([3, 2])
+    
+    with col1:
+        openai_key = st.text_input(
+            "**OpenAI API Key** (Required) ⚡",
+            type="password",
+            value=st.session_state.user_openai_key,
+            placeholder="sk-proj-...",
+            help="Your OpenAI API key for AI processing. Get it from: https://platform.openai.com/api-keys",
+            key="openai_key_input"
+        )
+    
+    with col2:
+        tavily_key = st.text_input(
+            "**Tavily API Key** (Optional) 🔍",
+            type="password",
+            value=st.session_state.user_tavily_key,
+            placeholder="Leave empty to use default",
+            help="Optional: Your Tavily API key for web search. Leave empty to use our default key.",
+            key="tavily_key_input"
+        )
+        
+        # Show Tavily status only if user provided their own key
+        user_provided = st.session_state.get('user_tavily_key', '').strip()
+        if user_provided:
+            st.info(f"ℹ️ Using your key: {user_provided[:8]}...")
+    
+    # Save button
+    col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 2])
+    with col_btn1:
+        if st.button("💾 Save Keys", type="primary", use_container_width=True):
+            if openai_key.strip():
+                st.session_state.user_openai_key = openai_key.strip()
+                st.session_state.user_tavily_key = tavily_key.strip()
+                
+                # Update environment
+                os.environ['OPENAI_API_KEY'] = openai_key.strip()
+                if tavily_key.strip():
+                    os.environ['TAVILY_API_KEY'] = tavily_key.strip()
+                
+                st.success("✅ API keys saved successfully!")
+                st.rerun()
+            else:
+                st.error("❌ OpenAI API key is required!")
+    
+    with col_btn2:
+        if st.button("🗑️ Clear", use_container_width=True):
+            st.session_state.user_openai_key = ''
+            st.session_state.user_tavily_key = ''
+            # Also clear from environment
+            if 'OPENAI_API_KEY' in os.environ:
+                del os.environ['OPENAI_API_KEY']
+            st.rerun()
+    
+    st.markdown("---")
+    
+    # Return True if OpenAI key is configured (only check session state, no .env fallback)
+    return bool(st.session_state.get('user_openai_key', ''))
 
 
 def main():
@@ -759,100 +830,19 @@ def main():
     st.markdown('<div class="main-header">🔍 AI Fact Checker</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-header">Standalone AI-Powered Fact Checking System</div>', unsafe_allow_html=True)
     
-    # Check API keys
-    if not check_api_keys():
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # API Key Configuration (Main UI)
+    api_keys_ok = render_api_key_input()
+    
+    # Check if we can proceed
+    if not api_keys_ok:
+        st.warning("⚠️ Please configure your OpenAI API key above to start using the fact checker.")
+        st.info("💡 **Tip:** Get your free OpenAI API key from [platform.openai.com/api-keys](https://platform.openai.com/api-keys)")
         st.stop()
     
-    # Sidebar
-    with st.sidebar:
-        st.header("ℹ️ About")
-        st.markdown("""
-        **AI Fact Checker** has three modes:
-        
-        **📝 Full Text Analysis:**
-        - Extracts multiple claims from text
-        - Verifies each claim independently
-        - Generates comprehensive report
-        
-        **⚡ Single Fact Verification:**
-        - Quick check for one specific fact
-        - Direct verification without extraction
-        - Faster results
-        
-        **🎯 Claim Extraction Only:**
-        - Just extract facts from text
-        - No verification (fastest & cheapest)
-        - Perfect for content analysis
-        
-        **Powered by:**
-        - OpenAI for language understanding
-        - Tavily for web search (verification modes)
-        - LangGraph for orchestration
-        
-        **Mode:** Standalone (no backend required)
-        """)
-        
-        st.divider()
-        
-        st.header("⚙️ Settings")
-        
-        # OpenAI API Key Status
-        if os.getenv('OPENAI_API_KEY'):
-            st.success("✅ OpenAI API Key configured")
-        else:
-            st.error("❌ OpenAI API Key missing")
-        
-        st.divider()
-        
-        # Tavily API Key Configuration
-        st.subheader("🔑 Tavily API Settings")
-        
-        # Check if Tavily key exists in environment
-        env_tavily_key = os.getenv('TAVILY_API_KEY')
-        
-        if env_tavily_key:
-            st.success("✅ Tavily API Key (from environment)")
-            st.caption(f"Key: {env_tavily_key[:8]}...{env_tavily_key[-4:]}")
-        else:
-            st.info("ℹ️ Using default Tavily API Key")
-        
-        # Option to use custom Tavily key
-        use_custom = st.checkbox(
-            "Use Custom Tavily API Key",
-            value=st.session_state.use_custom_tavily,
-            key="use_custom_tavily_checkbox",
-            help="Check this to enter your own Tavily API key. Otherwise, default key will be used."
-        )
-        
-        if use_custom:
-            custom_key = st.text_input(
-                "Enter your Tavily API Key",
-                value=st.session_state.custom_tavily_key,
-                type="password",
-                placeholder="tvly-...",
-                help="Get your free API key from https://tavily.com (1,000 searches/month free)"
-            )
-            
-            if st.button("💾 Save Tavily Key"):
-                if custom_key and custom_key.startswith('tvly-'):
-                    st.session_state.custom_tavily_key = custom_key
-                    st.session_state.use_custom_tavily = True
-                    os.environ['TAVILY_API_KEY'] = custom_key
-                    st.success("✅ Custom Tavily API Key saved!")
-                    st.rerun()
-                else:
-                    st.error("❌ Invalid Tavily API key format. Should start with 'tvly-'")
-        else:
-            st.session_state.use_custom_tavily = False
-            if not env_tavily_key:
-                st.caption("💡 Default key provided - no action needed")
-        
-        st.divider()
-        
-        if st.button("🔄 Clear Results"):
-            st.session_state.results = None
-            st.session_state.metrics_summary = None
-            st.rerun()
+    # Initialize API keys in environment
+    check_api_keys()
     
     # Main content
     st.header("Enter Content to Fact-Check")
@@ -875,7 +865,7 @@ def main():
             
             text = st.text_area(
                 "Text to Extract Claims From *",
-                placeholder="Enter text to extract claims...\n\nExample:\n\"India's Chandrayaan-3 successfully landed on the moon in 2023. This made India the fourth country to achieve a lunar landing. The mission cost approximately $75 million.\"",
+                placeholder='Enter text to extract claims...\\n\\nExample:\\n"India\'s Chandrayaan-3 successfully landed on the moon in 2023. This made India the fourth country to achieve a lunar landing. The mission cost approximately $75 million."',
                 height=200,
                 help="Enter text containing multiple factual statements"
             )
@@ -926,7 +916,7 @@ def main():
             
             claim = st.text_area(
                 "Fact to Verify *",
-                placeholder="Enter a single factual statement...\n\nExample: \"India's Chandrayaan-3 landed on the moon in August 2023\"",
+                placeholder='Enter a single factual statement...\\nExample: "India\'s Chandrayaan-3 landed on the moon in August 2023"',
                 height=120,
                 help="Enter one clear, specific factual claim to verify"
             )
@@ -1163,7 +1153,7 @@ def main():
         
         text_input = st.text_area(
             "Paste your text or transcript here",
-            placeholder="Paste any text (English, Hindi, Spanish, etc.)...\n\nExample:\n'भारत का चंद्रयान-3 मिशन 2023 में चंद्रमा पर सफलतापूर्वक उतरा। यह भारत को चंद्र दक्षिणी ध्रुव पर उतरने वाला पहला देश बना देता है।'",
+            placeholder="Paste any text (English, Hindi, Spanish, etc.)...Example:'भारत का चंद्रयान-3 मिशन 2023 में चंद्रमा पर सफलतापूर्वक उतरा। यह भारत को चंद्र दक्षिणी ध्रुव पर उतरने वाला पहला देश बना देता है।'",
             height=200,
             key="text_input_area"
         )
@@ -1251,7 +1241,13 @@ def main():
             st.divider()
             st.markdown("### Step 3: Select Claims to Verify")
             
-            st.info(f"💡 Found **{len(st.session_state.text_claims)} claims**. Select which ones you want to verify (saves cost by verifying only what matters).")
+            st.info(f"💡 Found **{len(st.session_state.text_claims)} claims**. Please review each claim carefully and select only those that are real facts and verifiable.")
+            
+            st.warning(
+                "⚠️ **Important:** Some extracted statements may not be actual facts or may be unverifiable. "
+                "Please manually check each claim before selecting. Remember, each fact check incurs a cost, "
+                "so selecting only relevant and verifiable claims helps optimize your usage."
+            )
             
             # Select All / Deselect All buttons
             col1, col2, col3, col4 = st.columns([1, 1, 1, 3])
