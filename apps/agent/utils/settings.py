@@ -51,3 +51,19 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+def reload_settings():
+    """Reload settings from environment variables.
+    
+    Call this after updating os.environ to refresh API keys.
+    Updates the global settings object in-place.
+    """
+    global settings
+    # Create a new settings object
+    new_settings = Settings()
+    # Update the existing object's attributes to maintain references
+    settings.openai_api_key = new_settings.openai_api_key
+    settings.exa_api_key = new_settings.exa_api_key
+    settings.tavily_api_key = new_settings.tavily_api_key
+    settings.redis_uri = new_settings.redis_uri

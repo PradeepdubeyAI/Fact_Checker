@@ -48,6 +48,7 @@ except ImportError:
 try:
     # Import utilities first
     from utils.metrics import get_metrics_tracker, reset_metrics
+    from utils.settings import reload_settings
     # Import agent creation functions (lazy load graphs when needed)
     from fact_checker.agent import create_graph
     from claim_extractor.agent import create_graph as create_claim_extractor_graph
@@ -138,6 +139,9 @@ def initialize_session_state():
 def run_claim_extraction(text: str) -> Dict[str, Any]:
     """Extract claims from text without verification"""
     try:
+        # Ensure API keys are set in environment
+        check_api_keys()
+        
         # Reset metrics for this run
         reset_metrics()
         
@@ -232,6 +236,9 @@ def run_single_fact_check(claim: str) -> Dict[str, Any]:
 def run_fact_check(question: str, answer: str) -> Dict[str, Any]:
     """Run the fact-checking process directly"""
     try:
+        # Ensure API keys are set in environment
+        check_api_keys()
+        
         # Reset metrics for this run
         reset_metrics()
         
@@ -443,6 +450,9 @@ def extract_claims_from_transcript(transcript: str) -> List[Dict]:
 def verify_selected_claims(claims: List, extracted_claims: List = None) -> Dict[str, Any]:
     """Verify only the selected claims"""
     try:
+        # Ensure API keys are set in environment
+        check_api_keys()
+        
         # NOTE: Don't reset metrics here - we want cumulative cost (extraction + verification)
         # Metrics were already reset at the start of extraction
         
@@ -756,6 +766,9 @@ def check_api_keys():
     if tavily_key:
         os.environ['TAVILY_API_KEY'] = tavily_key
     
+    # Reload settings to pick up new environment variables
+    reload_settings()
+    
     return bool(openai_key)
 
 
@@ -801,6 +814,9 @@ def render_api_key_input():
                 os.environ['OPENAI_API_KEY'] = openai_key.strip()
                 if tavily_key.strip():
                     os.environ['TAVILY_API_KEY'] = tavily_key.strip()
+                
+                # Reload settings to pick up new environment variables
+                reload_settings()
                 
                 st.success("✅ API keys saved successfully!")
                 st.rerun()
