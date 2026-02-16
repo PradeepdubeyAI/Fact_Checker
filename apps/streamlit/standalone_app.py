@@ -48,7 +48,7 @@ except ImportError:
 try:
     # Import utilities first
     from utils.metrics import get_metrics_tracker, reset_metrics
-    from utils.settings import reload_settings
+    from utils.settings import settings
     # Import agent creation functions (lazy load graphs when needed)
     from fact_checker.agent import create_graph
     from claim_extractor.agent import create_graph as create_claim_extractor_graph
@@ -102,6 +102,42 @@ st.markdown("""
     }
     </style>
     """, unsafe_allow_html=True)
+
+
+def reload_settings():
+    """Reload settings from environment variables.
+    
+    Call this after updating os.environ to refresh API keys.
+    Updates the global settings object directly from os.environ.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Directly update settings from environment variables
+    openai_key = os.environ.get('OPENAI_API_KEY')
+    tavily_key = os.environ.get('TAVILY_API_KEY')
+    redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379')
+    
+    # Validate and set OpenAI key
+    if openai_key:
+        if not openai_key.startswith("sk-proj-"):
+            raise ValueError("OpenAI API key must start with 'sk-proj-'")
+        settings.openai_api_key = openai_key
+        logger.info(f"✅ Settings reloaded: OpenAI key configured ({openai_key[:15]}...)")
+    else:
+        settings.openai_api_key = None
+        logger.warning("⚠️ Settings reloaded: No OpenAI key found in environment")
+    
+    # Validate and set Tavily key  
+    if tavily_key:
+        if not tavily_key.startswith("tvly-"):
+            raise ValueError("Tavily API key must start with 'tvly-'")
+        settings.tavily_api_key = tavily_key
+    else:
+        settings.tavily_api_key = None
+    
+    # Set Redis URL
+    settings.redis_uri = redis_url
 
 
 def initialize_session_state():
