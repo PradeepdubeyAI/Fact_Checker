@@ -57,13 +57,37 @@ def reload_settings():
     """Reload settings from environment variables.
     
     Call this after updating os.environ to refresh API keys.
-    Updates the global settings object in-place.
+    Updates the global settings object directly from os.environ.
     """
     global settings
-    # Create a new settings object
-    new_settings = Settings()
-    # Update the existing object's attributes to maintain references
-    settings.openai_api_key = new_settings.openai_api_key
-    settings.exa_api_key = new_settings.exa_api_key
-    settings.tavily_api_key = new_settings.tavily_api_key
-    settings.redis_uri = new_settings.redis_uri
+    import os
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    # Directly update settings from environment variables
+    # This bypasses any Pydantic caching issues
+    openai_key = os.environ.get('OPENAI_API_KEY')
+    tavily_key = os.environ.get('TAVILY_API_KEY')
+    redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379')
+    
+    # Validate and set OpenAI key
+    if openai_key:
+        if not openai_key.startswith("sk-proj-"):
+            raise ValueError("OpenAI API key must start with 'sk-proj-'")
+        settings.openai_api_key = openai_key
+        logger.info(f"✅ Settings reloaded: OpenAI key configured ({openai_key[:15]}...)")
+    else:
+        settings.openai_api_key = None
+        logger.warning("⚠️ Settings reloaded: No OpenAI key found in environment")
+    
+    # Validate and set Tavily key  
+    if tavily_key:
+        if not tavily_key.startswith("tvly-"):
+            raise ValueError("Tavily API key must start with 'tvly-'")
+        settings.tavily_api_key = tavily_key
+    else:
+        settings.tavily_api_key = None
+    
+    # Set Redis URL
+    settings.redis_uri = redis_url
