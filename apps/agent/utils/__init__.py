@@ -14,7 +14,7 @@ from .metrics import get_metrics_tracker, reset_metrics, MetricsTracker
 from .models import get_llm, get_default_llm
 from .rate_limiter import get_rate_limiter, RateLimiter
 from .redis import redis_client, test_redis_connection
-from .settings import settings
+from .settings import settings, reload_settings
 from .text import remove_following_sentences
 
 __all__ = [
@@ -45,6 +45,7 @@ __all__ = [
     "test_redis_connection",
     # Settings
     "settings",
+    "reload_settings",
     # Text utilities
     "remove_following_sentences",
 ]
